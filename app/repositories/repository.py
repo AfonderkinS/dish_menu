@@ -17,9 +17,9 @@ class BaseRepository:
         with self.session_factory() as session:
             return session.query(self.model).filter(self.model.id == id).one_or_none()
 
-    def find_by_name(self, name: str) -> MT | None:
+    def find_by_name(self, name: str) -> List[MT]:
         with self.session_factory() as session:
-            return session.query(self.model).filter(self.model.name.ilike(f"%{name}%")).first()
+            return session.query(self.model).filter(self.model.name.ilike(f"%{name}%")).all()
 
     def add(self, obj: MT) -> MT:
         with self.session_factory() as session:
