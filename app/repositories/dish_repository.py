@@ -1,5 +1,6 @@
 from typing import List, Tuple
 
+from sqlalchemy import and_
 from sqlalchemy.orm import aliased
 
 from models.dishes import Dish, Ingredient, dish_ingredient
@@ -59,3 +60,16 @@ class DishRepository(BaseRepository):
                 di_alias.c.weight,
             ).join(di_alias).filter(di_alias.c.dish_id == dish_id)
             return query.all()
+
+    def remove_ingredient(self, dish_id: int, ingredient_id: int) -> bool:
+        with self.session_factory() as session:
+            result = session.execute(
+                dish_ingredient.delete().where(
+                    and_(
+                        dish_ingredient.c.dish_id == dish_id,
+                        dish_ingredient.c.ingredient_id == ingredient_id,
+                    )
+                )
+            )
+            session.commit()
+            return result.rowcount > 0
