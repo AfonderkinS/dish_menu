@@ -28,3 +28,21 @@ class CookViewModel:
             }
             for cook, dishes_count in raw_results
         ]
+
+    def to_dict(self) -> Dict[str, Any]:
+        if not self.cook:
+            return {}
+        return {
+            "id": self.cook.id,
+            "name": self.cook.name,
+            "bio": self.cook.bio,
+            "dishes": [
+                {
+                    "id": d.id,
+                    "name": d.name,
+                    "description": d.description,
+                    "image_url": d.image_url,
+                }
+                for d in self.dishes
+            ],
+        }

@@ -34,6 +34,20 @@ class DishViewModel:
         self.dish_repo.remove_ingredient(self.dish.id, ingredient_id)
         self.ingredients = self.get_ingredients()
 
+    def to_dict(self) -> Dict[str, Any]:
+        if not self.dish:
+            return {}
+        if not self.ingredients:
+            self.get_ingredients()
+        return {
+            "id": self.dish.id,
+            "name": self.dish.name,
+            "recipe": self.dish.recipe,
+            "description": self.dish.description,
+            "image_url": self.dish.image_url,
+            "ingredients": self.ingredients,
+        }
+
 
 class DishListViewModel:
     def __init__(self, dish_repo: DishRepository):
@@ -45,7 +59,20 @@ class DishListViewModel:
         self.dishes = self.dish_repo.find_all()
 
     def filter_by_ingredient(self, ingredient_id: int) -> None:
+        self.selected_ingredient = ingredient_id
         self.dishes = self.dish_repo.find_by_ingredient(ingredient_id)
 
     def search_by_name(self, name: str) -> None:
         self.dishes = self.dish_repo.find_by_name(name)
+
+    def to_dict(self) -> List[Dict[str, Any]]:
+        return [
+            {
+                "id": dish.id,
+                "name": dish.name,
+                "description": dish.description,
+                "image_url": dish.image_url,
+                "recipe": dish.recipe,
+            }
+            for dish in self.dishes
+        ]
