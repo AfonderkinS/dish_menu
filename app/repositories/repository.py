@@ -19,7 +19,7 @@ class BaseRepository:
 
     def find_by_name(self, name: str) -> MT | None:
         with self.session_factory() as session:
-            return session.query(self.model).filter(self.model.name == name).first()
+            return session.query(self.model).filter(self.model.name.ilike(f"%{name}%")).first()
 
     def add(self, obj: MT) -> MT:
         with self.session_factory() as session:
