@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict, Any
 from models.dishes import Ingredient, Dish
 from repositories.ingredient_repository import IngredientRepository
 
@@ -20,3 +20,20 @@ class IngredientViewModel:
 
     def bulk_add(self, ingredient_names: List[str]) -> List[Ingredient]:
         return self.ingredient_repo.bulk_add_ingredients(ingredient_names)
+
+    def to_dict(self) -> Dict[str, Any]:
+        if not self.ingredient:
+            return {}
+        return {
+            "id": self.ingredient.id,
+            "name": self.ingredient.name,
+            "dishes": [
+                {
+                    "id": d.id,
+                    "name": d.name,
+                    "description": d.description,
+                    "image_url": d.image_url,
+                }
+                for d in self.dishes
+            ],
+        }
