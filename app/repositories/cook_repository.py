@@ -1,3 +1,5 @@
+from typing import List, Tuple
+
 from sqlalchemy import func
 from sqlalchemy.orm import aliased
 
@@ -9,7 +11,7 @@ class CookRepository(BaseRepository):
     def __init__(self, session_factory):
         super().__init__(session_factory, Cook)
 
-    def get_top_cooks(self, limit: int):
+    def get_top_cooks(self, limit: int) -> List[Tuple[Cook, int]]:
         with self.session_factory() as session:
             dish_alias = aliased(Dish)
 
@@ -25,7 +27,7 @@ class CookRepository(BaseRepository):
 
             return query.all()
 
-    def get_dishes_by_cook_id(self, cook_id):
+    def get_dishes_by_cook_id(self, cook_id) -> List[Dish]:
         with self.session_factory() as session:
             cook = session.query(self.model).filter(self.model.id == cook_id).one_or_none()
             if cook:

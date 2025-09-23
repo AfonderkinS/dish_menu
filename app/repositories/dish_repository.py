@@ -1,3 +1,5 @@
+from typing import List, Tuple
+
 from sqlalchemy.orm import aliased
 
 from models.dishes import Dish, Ingredient, dish_ingredient
@@ -8,12 +10,12 @@ class DishRepository(BaseRepository):
     def __init__(self, session_factory):
         super().__init__(session_factory, Dish)
 
-    def find_by_ingredient(self, ingredient_id: int):
+    def find_by_ingredient(self, ingredient_id: int) -> List[Dish]:
         with self.session_factory() as session:
             query = session.query(self.model).join(self.model.ingredients).filter(Ingredient.id == ingredient_id)
             return query.all()
 
-    def add_or_update_ingredient(self, dish_id: int, ingredient_id: int, weight: float):
+    def add_or_update_ingredient(self, dish_id: int, ingredient_id: int, weight: float) -> Dish | None:
         with self.session_factory() as session:
             dish = session.query(self.model).filter(self.model.id == dish_id).one_or_none()
             ingredient = session.query(Ingredient).filter(Ingredient.id == ingredient_id).one_or_none()
@@ -49,7 +51,7 @@ class DishRepository(BaseRepository):
             session.commit()
             return dish
 
-    def get_ingredients(self, dish_id: int):
+    def get_ingredients(self, dish_id: int) -> List[Tuple[Ingredient, float]]:
         with self.session_factory() as session:
             di_alias = aliased(dish_ingredient)
             query = session.query(

@@ -1,6 +1,7 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
+from typing import Generator
 
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
 DATABASE_URL = "sqlite:///D:\PythonProject\dish_menu\app\localdb.db"
 
@@ -9,13 +10,17 @@ session_local = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 Base = declarative_base()
 
-def init_db():
+def init_db() -> None:
     Base.metadata.create_all(engine)
 
 
-def drop_db():
+def drop_db() -> None:
     Base.metadata.drop_all(engine)
 
 
-def get_session():
-    return session_local()
+def get_session() -> Generator[Session, None, None]:
+    session = session_local()
+    try:
+        yield session
+    finally:
+        session.close()

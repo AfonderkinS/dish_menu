@@ -1,3 +1,4 @@
+from typing import List
 from models.dishes import Ingredient, dish_ingredient, Dish
 from repositories.repository import BaseRepository
 
@@ -6,7 +7,7 @@ class IngredientRepository(BaseRepository):
     def __init__(self, session_factory):
         super().__init__(session_factory, Ingredient)
 
-    def get_dishes(self, ingredient_id: int):
+    def get_dishes(self, ingredient_id: int) -> List[Dish]:
         with self.session_factory() as session:
             query = (
                 session.query(Dish)
@@ -15,7 +16,7 @@ class IngredientRepository(BaseRepository):
             )
             return query.all()
 
-    def bulk_add_ingredients(self, ingredients: list[str]):
+    def bulk_add_ingredients(self, ingredients: list[str]) -> List[Ingredient]:
         with self.session_factory() as session:
             existing = session.query(self.model).filter(self.model.name.in_(ingredients)).all()
             existing_names = {ing.name for ing in existing}
