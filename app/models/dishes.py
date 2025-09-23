@@ -17,7 +17,7 @@ class Cook(Base):
     __tablename__ = "cooks"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
+    name = Column(String, index=True, nullable=False)
     bio = Column(String, nullable=False, default="")
 
     dishes = relationship("Dish", back_populates="cook")
@@ -27,7 +27,7 @@ class Dish(Base):
     __tablename__ = "dishes"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
+    name = Column(String, index=True, nullable=False)
     description = Column(String, nullable=False, default="")
     recipe = Column(String, nullable=False, default="")
     image_url = Column(String, nullable=True)
