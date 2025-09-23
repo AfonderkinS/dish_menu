@@ -8,3 +8,14 @@ engine = create_engine(DATABASE_URL, echo=False, future=True)
 session_local = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
 Base = declarative_base()
+
+def init_db():
+    Base.metadata.create_all(engine)
+
+
+def drop_db():
+    Base.metadata.drop_all(engine)
+
+
+def get_session():
+    return session_local()
