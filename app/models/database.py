@@ -1,13 +1,19 @@
 from contextlib import contextmanager
+from pathlib import Path
 from typing import Generator
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base, Session
 
-DATABASE_URL = "sqlite:///D:/PythonProject/dish_menu/app/localdb.db"
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+DB_NAME = "localdb.db"
+
+DATABASE_URL = f"sqlite:///{BASE_DIR}/{DB_NAME}"
 
 engine = create_engine(DATABASE_URL, echo=False, future=True)
-session_local = sessionmaker(bind=engine, autoflush=False, autocommit=False)
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, expire_on_commit=False)
 
 Base = declarative_base()
 
@@ -21,8 +27,11 @@ def drop_db() -> None:
 
 @contextmanager
 def get_session() -> Generator[Session, None, None]:
-    session = session_local()
+    session = SessionLocal()
     try:
         yield session
+    except Exception:
+        session.rollback()
+        raise
     finally:
         session.close()
