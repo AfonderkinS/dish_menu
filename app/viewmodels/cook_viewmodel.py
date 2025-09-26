@@ -9,8 +9,21 @@ class CookViewModel:
         self.cook: Cook | None = None
         self.dishes: List[Dish] = []
 
+    def add_cook(self, cook: Cook) -> None:
+        if cook:
+            self.cook_repo.add(cook)
+        else:
+            raise ValueError("Cook cannot be None")
+
     def load_cook(self, cook_id: int) -> None:
         self.cook = self.cook_repo.find_one_or_none(cook_id)
+
+    def delete_cook(self):
+        self.cook_repo.delete(self.cook)
+
+    def update_cook(self) -> None:
+        id, data = self.cook.id, dict(list(self.to_dict().items())[1:])
+        self.cook_repo.update(id, **data)
 
     def load_dishes(self) -> None:
         if not self.cook:

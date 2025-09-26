@@ -12,6 +12,13 @@ class IngredientViewModel:
     def load_ingredient(self, ingredient_id: int) -> None:
         self.ingredient = self.ingredient_repo.find_one_or_none(ingredient_id)
 
+    def delete_ingredient(self):
+        self.ingredient_repo.delete(self.ingredient)
+
+    def update_ingredient(self) -> None:
+        id, data = self.ingredient.id, dict(list(self.to_dict().items())[1:])
+        self.ingredient_repo.update(id, **data)
+
     def get_dishes(self) -> List[Dish]:
         if not self.ingredient:
             raise ValueError('Ingredient not found')
