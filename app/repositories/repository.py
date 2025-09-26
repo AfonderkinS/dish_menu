@@ -28,9 +28,9 @@ class BaseRepository:
             session.refresh(obj)
         return obj
 
-    def update(self, obj: MT, **kwargs) -> MT:
+    def update(self, id: int, **kwargs) -> MT:
         with self.session_factory() as session:
-            obj = session.merge(obj)
+            obj = session.query(self.model).filter(self.model.id == id).one_or_none()
             for field, value in kwargs.items():
                 setattr(obj, field, value)
             session.commit()
