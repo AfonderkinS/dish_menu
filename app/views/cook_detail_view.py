@@ -8,7 +8,7 @@ from components.list_item import create_list_item
 from components.dialog import create_alert_dialog
 from styles import MARGIN, get_text_style, TITLE_SIZE, CONTRAST_COLOR, SUBTITLE_SIZE, ERROR_COLOR, PADDING, \
     PRIMARY_COLOR
-from viewmodels.cooks import CookViewModel
+from viewmodels.cook_viewmodel import CookViewModel
 
 
 class CookDetailView(ft.Container):
@@ -17,15 +17,11 @@ class CookDetailView(ft.Container):
         page: ft.Page,
         view_model: CookViewModel,
         cook_id: int, on_back: Callable,
-        on_update: Callable,
-        on_delete: Callable,
     ):
         self._page = page
         self.view_model = view_model
         self.cook_id = cook_id
         self.on_back = on_back
-        self.on_update = on_update
-        self.on_delete = on_delete
         self.name_field = create_text_field("Name")
         self.bio_field = create_text_field("Bio", multiline=True)
         self.dishes_list = ft.ListView(expand=True, spacing=MARGIN)
@@ -49,6 +45,13 @@ class CookDetailView(ft.Container):
             bgcolor=PRIMARY_COLOR
         )
 
+    def _on_delete(self):
+        self.view_model.delete_cook()
+
+    def _on_update(self):
+        self.view_model.update_cook()
+        self.load_data()
+
     def load_data(self):
         self.view_model.load_cook(self.cook_id)
         self.view_model.load_dishes()
@@ -66,7 +69,7 @@ class CookDetailView(ft.Container):
         if self.view_model.cook:
             self.view_model.cook.name = self.name_field.value
             self.view_model.cook.bio = self.bio_field.value
-            self.on_update(self.view_model.cook)
+            self._on_update()
 
     def handle_delete(self, e):
         dialog = create_alert_dialog(
@@ -77,13 +80,13 @@ class CookDetailView(ft.Container):
                 create_button("No", on_click=lambda e: self.close_dialog()),
             ],
         )
-        self._page.dialog = dialog
-        dialog.open = True
+        self._page.open(dialog)
         self._page.update()
 
     def confirm_delete(self):
         if self.view_model.cook:
-            self.on_delete(self.view_model.cook)
+            self._on_delete()
+            self.on_back()
         self.close_dialog()
 
     def close_dialog(self):

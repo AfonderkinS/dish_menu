@@ -5,6 +5,8 @@ import flet as ft
 from components.button import create_button
 from components.card import create_card
 from components.list_item import create_list_item
+from components.form_dialog import FormBuilder, FormDialog
+from models.dishes import Cook
 from styles import (
     MARGIN,
     get_text_style,
@@ -15,17 +17,16 @@ from styles import (
     BODY_SIZE,
     SECONDARY_COLOR,
 )
-from viewmodels.cooks import CookViewModel
+from viewmodels.cook_viewmodel import CookViewModel
 
 
 class CookListView(ft.Container):
     def __init__(
-        self, page: ft.Page, view_model: CookViewModel, on_select_cook: Callable, on_add_cook: Callable
+        self, page: ft.Page, view_model: CookViewModel, on_select_cook: Callable
     ):
         self._page = page
         self.view_model = view_model
         self.on_select_cook = on_select_cook
-        self.on_add_cook = on_add_cook
         self.top_cooks_list = ft.ListView(expand=True, spacing=MARGIN)
         self.all_cooks_list = ft.ListView(expand=True, spacing=MARGIN)
 
@@ -47,7 +48,7 @@ class CookListView(ft.Container):
                     ),
                     self.all_cooks_list,
                     create_button(
-                        "Add New Cook", on_click=lambda e: self.on_add_cook()
+                        "Add New Cook", on_click=lambda e: self._on_add_cook()
                     ),
                 ],
                 spacing=PADDING,
@@ -56,6 +57,24 @@ class CookListView(ft.Container):
             padding=PADDING,
             bgcolor=PRIMARY_COLOR,
         )
+
+    def _on_add_cook(self):
+        form: FormDialog = (
+            FormBuilder("Add cook")
+            .add_text_field("Name", required=True)
+            .add_text_field("Bio", required=True)
+            .on_save_action(self._save_cook)
+            .build()
+        )
+        form.show(self._page)
+
+    def _save_cook(self, values):
+        cook = Cook(
+            name=values["Name"],
+            bio=values["Bio"],
+        )
+        self.view_model.add_cook(cook)
+        self.load_data()
 
     def load_data(self):
         self.top_cooks_list.controls.clear()

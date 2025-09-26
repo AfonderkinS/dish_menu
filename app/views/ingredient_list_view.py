@@ -10,7 +10,7 @@ from styles import (
     PADDING,
     PRIMARY_COLOR,
 )
-from viewmodels.ingredients import IngredientViewModel
+from viewmodels.ingredient_viewmodel import IngredientViewModel
 from components.list_item import create_list_item
 from components.button import create_button
 from components.form_field import create_text_field

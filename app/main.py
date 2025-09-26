@@ -6,9 +6,9 @@ from repositories.cook_repository import CookRepository
 from repositories.dish_repository import DishRepository
 from repositories.ingredient_repository import IngredientRepository
 from styles import PRIMARY_COLOR, ACCENT_COLOR
-from viewmodels.cooks import CookViewModel
-from viewmodels.dishes import DishListViewModel, DishViewModel
-from viewmodels.ingredients import IngredientViewModel
+from viewmodels.cook_viewmodel import CookViewModel
+from viewmodels.dish_viewmodel import DishListViewModel, DishViewModel
+from viewmodels.ingredient_viewmodel import IngredientViewModel
 from views.cook_detail_view import CookDetailView
 from views.cook_list_view import CookListView
 from views.dish_detail_view import DishDetailView
@@ -42,7 +42,6 @@ def main(page: ft.Page) -> None:
             page,
             cook_vm,
             on_select_cook=show_cook_detail,
-            on_add_cook=add_new_cook,
         )
         view.load_data()
         content_area.content = view
@@ -54,21 +53,14 @@ def main(page: ft.Page) -> None:
             cook_vm,
             cook_id,
             on_back=show_cook_list,
-            on_update=lambda cook: cook_repo.update(cook),
-            on_delete=lambda cook: [cook_repo.delete(cook), show_cook_list()],
         )
         view.load_data()
         content_area.content = view
         page.update()
 
-    def add_new_cook():
-        new_cook = Cook(name="New Cook", bio="Bio")
-        cook_repo.add(new_cook)
-        show_cook_list()
-
     def show_dish_list():
         view = DishListView(
-            page, dish_list_vm, on_select_dish=show_dish_detail, on_add_dish=add_new_dish
+            page, dish_list_vm, on_select_dish=show_dish_detail
         )
         view.load_data()
         content_area.content = view
@@ -80,17 +72,10 @@ def main(page: ft.Page) -> None:
             dish_vm,
             dish_id,
             on_back=show_dish_list,
-            on_update=lambda dish: dish_repo.update(dish),
-            on_delete=lambda dish: [dish_repo.delete(dish), show_dish_list()],
         )
         view.load_data()
         content_area.content = view
         page.update()
-
-    def add_new_dish():
-        new_dish = Dish(name="New Dish", description="Desc", recipe="Recipe")
-        dish_repo.add(new_dish)
-        show_dish_list()
 
     def show_ingredient_list():
         view = IngredientListView(
@@ -106,8 +91,6 @@ def main(page: ft.Page) -> None:
             ingredient_vm,
             ingredient_id,
             on_back=show_ingredient_list,
-            on_update=lambda ing: ingredient_repo.update(ing),
-            on_delete=lambda ing: [ingredient_repo.delete(ing), show_ingredient_list()],
         )
         view.load_data()
         content_area.content = view

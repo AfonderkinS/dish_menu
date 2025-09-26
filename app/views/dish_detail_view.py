@@ -12,7 +12,7 @@ from styles import (
     PADDING,
     PRIMARY_COLOR,
 )
-from viewmodels.dishes import DishViewModel
+from viewmodels.dish_viewmodel import DishViewModel
 from components.form_field import create_text_field, create_number_field
 from components.button import create_button, create_icon_button
 from components.list_item import create_list_item
@@ -26,21 +26,29 @@ class DishDetailView(ft.Container):
         view_model: DishViewModel,
         dish_id: int,
         on_back: Callable,
-        on_update: Callable,
-        on_delete: Callable,
     ):
         self._page = page
         self.view_model = view_model
         self.dish_id = dish_id
         self.on_back = on_back
-        self.on_update = on_update
-        self.on_delete = on_delete
         self.name_field = create_text_field("Name")
         self.description_field = create_text_field("Description", multiline=True)
         self.recipe_field = create_text_field("Recipe", multiline=True)
         self.image_url_field = create_text_field("Image URL")
+        self.cook_dropdown = ft.Dropdown(
+            label="Cook",
+            options=[],
+            expand=True,
+            on_change=self.handle_cook_change,
+            color=CONTRAST_COLOR,
+        )
         self.ingredients_list = ft.ListView(expand=True, spacing=MARGIN)
-        self.new_ingredient_id = create_text_field("Ingredient ID")
+        self.ingredient_dropdown = ft.Dropdown(
+            label="Ingredient",
+            options=[],
+            expand=True,
+            color=CONTRAST_COLOR,
+        )
         self.new_weight = create_number_field("Weight")
 
         super().__init__(
@@ -63,6 +71,7 @@ class DishDetailView(ft.Container):
                     self.description_field,
                     self.recipe_field,
                     self.image_url_field,
+                    ft.Row([self.cook_dropdown]),
                     ft.Text(
                         "Ingredients",
                         style=get_text_style(SUBTITLE_SIZE, CONTRAST_COLOR),
@@ -70,7 +79,7 @@ class DishDetailView(ft.Container):
                     self.ingredients_list,
                     ft.Row(
                         [
-                            self.new_ingredient_id,
+                            self.ingredient_dropdown,
                             self.new_weight,
                             create_button(
                                 "Add/Update Ingredient",
@@ -97,6 +106,13 @@ class DishDetailView(ft.Container):
             bgcolor=PRIMARY_COLOR,
         )
 
+    def _on_delete(self):
+        self.view_model.delete_dish()
+
+    def _on_update(self):
+        self.view_model.update_dish()
+        self.load_data()
+
     def load_data(self):
         self.view_model.load_dish(self.dish_id)
         if self.view_model.dish:
@@ -104,7 +120,34 @@ class DishDetailView(ft.Container):
             self.description_field.value = self.view_model.dish.description
             self.recipe_field.value = self.view_model.dish.recipe
             self.image_url_field.value = self.view_model.dish.image_url
+
+            self.load_ingredients()
+            self.load_cooks()
             self.update_ingredients()
+
+    def load_ingredients(self):
+        ingredients = self.view_model.get_available_ingredients()
+        self.ingredient_dropdown.options.clear()
+        self.ingredient_dropdown.options.append(
+            ft.dropdown.Option(key="", text="Select ingredient")
+        )
+        for ingredient in ingredients:
+            self.ingredient_dropdown.options.append(
+                ft.dropdown.Option(key=str(ingredient.id), text=ingredient.name)
+            )
+        self.ingredient_dropdown.value = ""
+
+    def load_cooks(self):
+        cooks = self.view_model.get_available_cooks()
+        self.cook_dropdown.options.clear()
+        for cook in cooks:
+            self.cook_dropdown.options.append(
+                ft.dropdown.Option(key=str(cook.id), text=cook.name)
+            )
+        if self.view_model.dish and self.view_model.dish.cook_id:
+            self.cook_dropdown.value = str(self.view_model.dish.cook_id)
+        else:
+            self.cook_dropdown.value = ""
 
     def update_ingredients(self):
         self.ingredients_list.controls.clear()
@@ -124,14 +167,27 @@ class DishDetailView(ft.Container):
             )
         self._page.update()
 
+    def handle_cook_change(self, e):
+        if e.control.value and e.control.value != "":
+            cook_id = int(e.control.value)
+            self.view_model.set_dish_cook(cook_id)
+            self.load_data()
+
     def handle_add_ingredient(self, e):
         try:
-            ing_id = int(self.new_ingredient_id.value)
+            if (
+                not self.ingredient_dropdown.value
+                or self.ingredient_dropdown.value == ""
+            ):
+                return
+
+            ing_id = int(self.ingredient_dropdown.value)
             weight = float(self.new_weight.value)
             self.view_model.add_or_update_ingredient(ing_id, weight)
             self.update_ingredients()
-            self.new_ingredient_id.value = ""
+            self.ingredient_dropdown.value = ""
             self.new_weight.value = ""
+            self._page.update()
         except ValueError:
             pass
 
@@ -145,7 +201,7 @@ class DishDetailView(ft.Container):
             self.view_model.dish.description = self.description_field.value
             self.view_model.dish.recipe = self.recipe_field.value
             self.view_model.dish.image_url = self.image_url_field.value
-            self.on_update(self.view_model.dish)
+            self._on_update()
 
     def handle_delete(self, e):
         dialog = create_alert_dialog(
@@ -156,13 +212,13 @@ class DishDetailView(ft.Container):
                 create_button("No", on_click=lambda e: self.close_dialog()),
             ],
         )
-        self._page.overlay.append(dialog)
-        dialog.open = True
+        self._page.open(dialog)
         self._page.update()
 
     def confirm_delete(self):
         if self.view_model.dish:
-            self.on_delete(self.view_model.dish)
+            self._on_delete()
+            self.on_back()
         self.close_dialog()
 
     def close_dialog(self):

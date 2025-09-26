@@ -2,7 +2,9 @@ from typing import Callable
 
 import flet as ft
 
+from components.form_dialog import FormDialog, FormBuilder
 from components.list_item import create_list_item
+from models.dishes import Dish
 from styles import (
     MARGIN,
     CONTRAST_COLOR,
@@ -10,11 +12,8 @@ from styles import (
     get_text_style,
     PADDING,
     PRIMARY_COLOR,
-    BODY_SIZE,
-    SECONDARY_COLOR,
 )
-from viewmodels.dishes import DishListViewModel
-from components.card import create_card
+from viewmodels.dish_viewmodel import DishListViewModel
 from components.button import create_button
 from components.form_field import create_text_field
 
@@ -25,12 +24,10 @@ class DishListView(ft.Container):
         page: ft.Page,
         view_model: DishListViewModel,
         on_select_dish: Callable,
-        on_add_dish: Callable,
     ):
         self._page = page
         self.view_model = view_model
         self.on_select_dish = on_select_dish
-        self.on_add_dish = on_add_dish
         self.search_field = create_text_field(
             "Search by name", on_change=self.handle_search
         )
@@ -52,7 +49,7 @@ class DishListView(ft.Container):
                     self.ingredient_filter,
                     self.dishes_list,
                     create_button(
-                        "Add New Dish", on_click=lambda e: self.on_add_dish()
+                        "Add New Dish", on_click=lambda e: self._on_add_dish()
                     ),
                 ],
                 spacing=PADDING,
@@ -61,6 +58,28 @@ class DishListView(ft.Container):
             padding=PADDING,
             bgcolor=PRIMARY_COLOR,
         )
+
+    def _on_add_dish(self):
+        form: FormDialog = (
+            FormBuilder("Add cook")
+            .add_text_field("Name", required=True)
+            .add_text_field("Description", required=True)
+            .add_text_field("Recipe", required=True)
+            .add_text_field("Image URL", required=True)
+            .on_save_action(self._save_dish)
+            .build()
+        )
+        form.show(self._page)
+
+    def _save_dish(self, values):
+        dish = Dish(
+            name=values["Name"],
+            description=values["Description"],
+            recipe=values["Recipe"],
+            image_url=values["Image URL"],
+        )
+        self.view_model.add_dish(dish)
+        self.load_data()
 
     def load_data(self):
         self.view_model.load_all_dishes()

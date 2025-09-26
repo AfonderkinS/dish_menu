@@ -12,7 +12,7 @@ from styles import (
     PADDING,
     PRIMARY_COLOR,
 )
-from viewmodels.ingredients import IngredientViewModel
+from viewmodels.ingredient_viewmodel import IngredientViewModel
 from components.form_field import create_text_field
 from components.button import create_button, create_icon_button
 from components.list_item import create_list_item
@@ -26,15 +26,11 @@ class IngredientDetailView(ft.Container):
         view_model: IngredientViewModel,
         ingredient_id: int,
         on_back: Callable,
-        on_update: Callable,
-        on_delete: Callable,
     ):
         self._page = page
         self.view_model = view_model
         self.ingredient_id = ingredient_id
         self.on_back = on_back
-        self.on_update = on_update
-        self.on_delete = on_delete
         self.name_field = create_text_field("Name")
         self.dishes_list = ft.ListView(expand=True, spacing=MARGIN)
 
@@ -77,6 +73,13 @@ class IngredientDetailView(ft.Container):
             bgcolor=PRIMARY_COLOR,
         )
 
+    def _on_delete(self):
+        self.view_model.delete_ingredient()
+
+    def _on_update(self):
+        self.view_model.update_ingredient()
+        self.load_data()
+
     def load_data(self):
         self.view_model.load_ingredient(self.ingredient_id)
         if self.view_model.ingredient:
@@ -92,7 +95,7 @@ class IngredientDetailView(ft.Container):
     def handle_update(self, e):
         if self.view_model.ingredient:
             self.view_model.ingredient.name = self.name_field.value
-            self.on_update(self.view_model.ingredient)
+            self._on_update()
 
     def handle_delete(self, e):
         dialog = create_alert_dialog(
@@ -103,13 +106,13 @@ class IngredientDetailView(ft.Container):
                 create_button("No", on_click=lambda e: self.close_dialog()),
             ],
         )
-        self._page.overlay.append(dialog)
-        dialog.open = True
+        self._page.open(dialog)
         self._page.update()
 
     def confirm_delete(self):
         if self.view_model.ingredient:
-            self.on_delete(self.view_model.ingredient)
+            self._on_delete()
+            self.on_back()
         self.close_dialog()
 
     def close_dialog(self):
