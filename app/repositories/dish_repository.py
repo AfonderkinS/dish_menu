@@ -3,7 +3,7 @@ from typing import List, Tuple
 from sqlalchemy import and_
 from sqlalchemy.orm import aliased
 
-from models.dishes import Dish, Ingredient, dish_ingredient
+from models.dishes import Dish, Ingredient, dish_ingredient, Cook
 from repositories.repository import BaseRepository
 
 
@@ -73,3 +73,18 @@ class DishRepository(BaseRepository):
             )
             session.commit()
             return result.rowcount > 0
+
+    def get_available_cooks(self) -> List[Cook]:
+        with self.session_factory() as session:
+            return session.query(Cook).all()
+
+    def get_available_ingredients(self) -> List[Ingredient]:
+        with self.session_factory() as session:
+            return session.query(Ingredient).all()
+
+    def set_dish_cook(self, dish_id: int, cook_id: int) -> None:
+        with self.session_factory() as session:
+            dish = session.query(self.model).filter(self.model.id == dish_id).one_or_none()
+            if dish:
+                dish.cook_id = cook_id
+                session.commit()
