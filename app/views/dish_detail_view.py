@@ -115,11 +115,11 @@ class DishDetailView(ft.Container):
 
     def load_data(self):
         self.view_model.load_dish(self.dish_id)
-        if self.view_model.dish:
-            self.name_field.value = self.view_model.dish.name
-            self.description_field.value = self.view_model.dish.description
-            self.recipe_field.value = self.view_model.dish.recipe
-            self.image_url_field.value = self.view_model.dish.image_url
+        if self.view_model.model:
+            self.name_field.value = self.view_model.model.name
+            self.description_field.value = self.view_model.model.description
+            self.recipe_field.value = self.view_model.model.recipe
+            self.image_url_field.value = self.view_model.model.image_url
 
             self.load_ingredients()
             self.load_cooks()
@@ -144,8 +144,8 @@ class DishDetailView(ft.Container):
             self.cook_dropdown.options.append(
                 ft.dropdown.Option(key=str(cook.id), text=cook.name)
             )
-        if self.view_model.dish and self.view_model.dish.cook_id:
-            self.cook_dropdown.value = str(self.view_model.dish.cook_id)
+        if self.view_model.model and self.view_model.model.cook_id:
+            self.cook_dropdown.value = str(self.view_model.model.cook_id)
         else:
             self.cook_dropdown.value = ""
 
@@ -196,11 +196,11 @@ class DishDetailView(ft.Container):
         self.update_ingredients()
 
     def handle_update(self, e):
-        if self.view_model.dish:
-            self.view_model.dish.name = self.name_field.value
-            self.view_model.dish.description = self.description_field.value
-            self.view_model.dish.recipe = self.recipe_field.value
-            self.view_model.dish.image_url = self.image_url_field.value
+        if self.view_model.model:
+            self.view_model.model.name = self.name_field.value
+            self.view_model.model.description = self.description_field.value
+            self.view_model.model.recipe = self.recipe_field.value
+            self.view_model.model.image_url = self.image_url_field.value
             self._on_update()
 
     def handle_delete(self, e):
@@ -216,7 +216,7 @@ class DishDetailView(ft.Container):
         self._page.update()
 
     def confirm_delete(self):
-        if self.view_model.dish:
+        if self.view_model.model:
             self._on_delete()
             self.on_back()
         self.close_dialog()

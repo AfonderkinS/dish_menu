@@ -2,74 +2,85 @@ from typing import List, Dict, Any
 
 from models.dishes import Dish, Cook, Ingredient
 from repositories.dish_repository import DishRepository
+from viewmodels.base_viewmodel import BaseViewModel
 
 
-class DishViewModel:
+class DishViewModel(BaseViewModel[Dish, DishRepository]):
     def __init__(self, dish_repo: DishRepository):
-        self.dish_repo = dish_repo
-        self.dish: Dish | None = None
+        super().__init__(dish_repo)
         self.ingredients: List[Dict[str, Any]] = []
         self.available_cooks: List[Cook] = []
         self.available_ingredients: List[Ingredient] = []
 
-    def delete_dish(self) -> None:
-        self.dish_repo.delete(self.dish)
+    def _load_related_data_impl(self) -> List[Dict[str, Any]]:
+        """Загрузка ингредиентов блюда"""
+        if not self.model:
+            return []
 
-    def update_dish(self):
-        id, data = self.dish.id, dict(list(self.to_dict().items())[1:])
-        self.dish_repo.update(id, **data)
-
-    def load_dish(self, dish_id: int) -> None:
-        self.dish = self.dish_repo.find_one_or_none(id=dish_id)
-
-    def get_ingredients(self) -> List[Dict[str, Any]]:
-        if not self.dish:
-            raise ValueError("dish not found")
-        raw_ingredients = self.dish_repo.get_ingredients(self.dish.id)
+        raw_ingredients = self.repository.get_ingredients(self.model.id)
         self.ingredients = [
             {"id": ing.id, "name": ing.name, "weight": weight}
             for ing, weight in raw_ingredients
         ]
         return self.ingredients
 
+    def get_ingredients(self) -> List[Dict[str, Any]]:
+        """Получение ингредиентов блюда"""
+        self.load_related_data()
+        return self.ingredients
+
     def add_or_update_ingredient(self, ingredient_id: int, weight: float) -> None:
-        if not self.dish:
-            raise ValueError("dish not found")
-        self.dish = self.dish_repo.add_or_update_ingredient(self.dish.id, ingredient_id, weight)
+        if not self.model:
+            raise ValueError("Dish not found")
+        self.model = self.repository.add_or_update_ingredient(
+            self.model.id, ingredient_id, weight
+        )
+        self.load_related_data()
 
     def delete_ingredient(self, ingredient_id: int) -> None:
-        if not self.dish:
-            raise ValueError("dish not found")
-        self.dish_repo.remove_ingredient(self.dish.id, ingredient_id)
-        self.ingredients = self.get_ingredients()
+        if not self.model:
+            raise ValueError("Dish not found")
+        self.repository.remove_ingredient(self.model.id, ingredient_id)
+        self.load_related_data()
 
     def get_available_cooks(self) -> List[Cook]:
-        self.available_cooks = self.dish_repo.get_available_cooks()
+        self.available_cooks = self.repository.get_available_cooks()
         return self.available_cooks
 
     def get_available_ingredients(self) -> List[Ingredient]:
-        self.available_ingredients = self.dish_repo.get_available_ingredients()
+        self.available_ingredients = self.repository.get_available_ingredients()
         return self.available_ingredients
 
     def set_dish_cook(self, cook_id: int) -> None:
-        if not self.dish:
-            raise ValueError("dish not found")
-        self.dish_repo.set_dish_cook(self.dish.id, cook_id)
-        self.load_dish(self.dish.id)
+        if not self.model:
+            raise ValueError("Dish not found")
+        self.repository.set_dish_cook(self.model.id, cook_id)
+        self.load(self.model.id)
 
     def to_dict(self) -> Dict[str, Any]:
-        if not self.dish:
+        if not self.model:
             return {}
+
         if not self.ingredients:
-            self.get_ingredients()
+            self.load_related_data()
+
         return {
-            "id": self.dish.id,
-            "name": self.dish.name,
-            "recipe": self.dish.recipe,
-            "description": self.dish.description,
-            "image_url": self.dish.image_url,
+            "id": self.model.id,
+            "name": self.model.name,
+            "recipe": self.model.recipe,
+            "description": self.model.description,
+            "image_url": self.model.image_url,
             "ingredients": self.ingredients,
         }
+
+    def delete_dish(self) -> None:
+        self.delete()
+
+    def update_dish(self) -> None:
+        self.update()
+
+    def load_dish(self, dish_id: int) -> None:
+        self.load(dish_id)
 
 
 class DishListViewModel:
