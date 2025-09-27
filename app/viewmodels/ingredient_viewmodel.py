@@ -1,39 +1,41 @@
 from typing import List, Dict, Any
+
 from models.dishes import Ingredient, Dish
 from repositories.ingredient_repository import IngredientRepository
+from viewmodels.base_viewmodel import BaseViewModel
 
 
-class IngredientViewModel:
+class IngredientViewModel(BaseViewModel[Ingredient, IngredientRepository]):
     def __init__(self, ingredient_repo: IngredientRepository):
-        self.ingredient_repo = ingredient_repo
-        self.ingredient: Ingredient | None = None
+        super().__init__(ingredient_repo)
         self.dishes: List[Dish] = []
 
-    def load_ingredient(self, ingredient_id: int) -> None:
-        self.ingredient = self.ingredient_repo.find_one_or_none(ingredient_id)
+    def _load_related_data_impl(self) -> List[Dish]:
+        """Загрузка блюд, содержащих ингредиент"""
+        if not self.model:
+            return []
 
-    def delete_ingredient(self):
-        self.ingredient_repo.delete(self.ingredient)
-
-    def update_ingredient(self) -> None:
-        id, data = self.ingredient.id, dict(list(self.to_dict().items())[1:])
-        self.ingredient_repo.update(id, **data)
+        self.dishes = self.repository.get_dishes(self.model.id)
+        return self.dishes
 
     def get_dishes(self) -> List[Dish]:
-        if not self.ingredient:
-            raise ValueError('Ingredient not found')
-        self.dishes = self.ingredient_repo.get_dishes(self.ingredient.id)
+        """Получение блюд с ингредиентом"""
+        self.load_related_data()
         return self.dishes
 
     def bulk_add(self, ingredient_names: List[str]) -> List[Ingredient]:
-        return self.ingredient_repo.bulk_add_ingredients(ingredient_names)
+        return self.repository.bulk_add_ingredients(ingredient_names)
 
     def to_dict(self) -> Dict[str, Any]:
-        if not self.ingredient:
+        if not self.model:
             return {}
+
+        if not self.dishes:
+            self.load_related_data()
+
         return {
-            "id": self.ingredient.id,
-            "name": self.ingredient.name,
+            "id": self.model.id,
+            "name": self.model.name,
             "dishes": [
                 {
                     "id": d.id,
@@ -44,3 +46,13 @@ class IngredientViewModel:
                 for d in self.dishes
             ],
         }
+
+    # Алиасы для обратной совместимости
+    def load_ingredient(self, ingredient_id: int) -> None:
+        self.load(ingredient_id)
+
+    def delete_ingredient(self) -> None:
+        self.delete()
+
+    def update_ingredient(self) -> None:
+        self.update()

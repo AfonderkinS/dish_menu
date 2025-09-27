@@ -47,7 +47,7 @@ class IngredientListView(ft.Container):
         )
 
     def load_data(self):
-        ingredients = self.view_model.ingredient_repo.find_all()
+        ingredients = self.view_model.repository.find_all()
         self.ingredients_list.controls.clear()
         for ing in ingredients:
             self.ingredients_list.controls.append(

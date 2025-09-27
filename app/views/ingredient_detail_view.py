@@ -82,8 +82,8 @@ class IngredientDetailView(ft.Container):
 
     def load_data(self):
         self.view_model.load_ingredient(self.ingredient_id)
-        if self.view_model.ingredient:
-            self.name_field.value = self.view_model.ingredient.name
+        if self.view_model.model:
+            self.name_field.value = self.view_model.model.name
             self.view_model.get_dishes()
             self.dishes_list.controls.clear()
             for dish in self.view_model.dishes:
@@ -93,8 +93,8 @@ class IngredientDetailView(ft.Container):
         self._page.update()
 
     def handle_update(self, e):
-        if self.view_model.ingredient:
-            self.view_model.ingredient.name = self.name_field.value
+        if self.view_model.model:
+            self.view_model.model.name = self.name_field.value
             self._on_update()
 
     def handle_delete(self, e):
@@ -110,7 +110,7 @@ class IngredientDetailView(ft.Container):
         self._page.update()
 
     def confirm_delete(self):
-        if self.view_model.ingredient:
+        if self.view_model.model:
             self._on_delete()
             self.on_back()
         self.close_dialog()
