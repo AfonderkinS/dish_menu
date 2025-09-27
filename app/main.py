@@ -1,7 +1,6 @@
 import flet as ft
 
 from models.database import init_db, get_session
-from models.dishes import Cook, Dish
 from repositories.cook_repository import CookRepository
 from repositories.dish_repository import DishRepository
 from repositories.ingredient_repository import IngredientRepository
@@ -18,10 +17,11 @@ from views.ingredient_list_view import IngredientListView
 
 
 def main(page: ft.Page) -> None:
-    page.title = "Популярные блюда"
+    page.title = "Popular dishes"
     page.bgcolor = PRIMARY_COLOR
     page.scroll = ft.ScrollMode.AUTO
     page.theme = ft.Theme(color_scheme_seed=ACCENT_COLOR)
+    page.padding = 0
 
     init_db()
     session_factory = get_session
@@ -35,7 +35,14 @@ def main(page: ft.Page) -> None:
     dish_vm = DishViewModel(dish_repo)
     ingredient_vm = IngredientViewModel(ingredient_repo)
 
-    content_area = ft.Container(expand=True)
+    resize_animation = ft.Animation(duration=400, curve=ft.AnimationCurve.EASE_OUT)
+
+    content_area = ft.Container(
+        expand=True,
+        content=ft.Column(expand=True),
+        margin=0,
+        padding=10,
+    )
 
     def show_cook_list():
         view = CookListView(
@@ -59,9 +66,7 @@ def main(page: ft.Page) -> None:
         page.update()
 
     def show_dish_list():
-        view = DishListView(
-            page, dish_list_vm, on_select_dish=show_dish_detail
-        )
+        view = DishListView(page, dish_list_vm, on_select_dish=show_dish_detail)
         view.load_data()
         content_area.content = view
         page.update()
@@ -101,7 +106,6 @@ def main(page: ft.Page) -> None:
         label_type=ft.NavigationRailLabelType.ALL,
         min_width=100,
         min_extended_width=200,
-        expand=True,
         destinations=[
             ft.NavigationRailDestination(icon=ft.Icons.PEOPLE, label="Cooks"),
             ft.NavigationRailDestination(icon=ft.Icons.FOOD_BANK, label="Dishes"),
@@ -116,27 +120,39 @@ def main(page: ft.Page) -> None:
         }[e.control.selected_index](),
     )
 
-    main_layout = ft.Column(
-        [
-            ft.Row(
-                [
-                    ft.Container(
-                        navigation, width=200, bgcolor=PRIMARY_COLOR
-                    ),  # Constrain width
-                    ft.VerticalDivider(width=1),
-                    content_area,
-                ],
-                expand=True,
-                height=page.height,
-            )
-        ],
-        expand=True,
-        scroll=ft.ScrollMode.AUTO,
+    nav_container = ft.Container(
+        content=navigation,
+        width=150,
+        height=page.height,
+        bgcolor=PRIMARY_COLOR,
+        animate=resize_animation,
     )
 
-    page.controls.clear()
-    page.controls.append(main_layout)
-    page.update()
+    main_layout = ft.Row(
+        [
+            nav_container,
+            ft.VerticalDivider(width=1),
+            content_area,
+        ],
+        expand=True,
+        width=page.width,
+        height=page.height,
+        spacing=0,
+        animate_size=resize_animation,
+    )
+
+    def update_size_page(e=None):
+        nav_container.height = page.height
+        main_layout.height = page.height
+        nav_container.width = 150
+        main_layout.width = page.width
+        page.update()
+
+    page.on_resized = update_size_page
+
+    page.add(main_layout)
+
+    update_size_page()
     show_cook_list()
 
 
