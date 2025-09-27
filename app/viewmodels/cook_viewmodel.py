@@ -1,37 +1,25 @@
 from typing import List, Dict, Any
 from models.dishes import Cook, Dish
 from repositories.cook_repository import CookRepository
+from viewmodels.base_viewmodel import BaseViewModel
 
 
-class CookViewModel:
+class CookViewModel(BaseViewModel[Cook, CookRepository]):
     def __init__(self, cook_repo: CookRepository):
-        self.cook_repo = cook_repo
-        self.cook: Cook | None = None
+        super().__init__(cook_repo)
         self.dishes: List[Dish] = []
 
-    def add_cook(self, cook: Cook) -> None:
-        if cook:
-            self.cook_repo.add(cook)
-        else:
-            raise ValueError("Cook cannot be None")
-
-    def load_cook(self, cook_id: int) -> None:
-        self.cook = self.cook_repo.find_one_or_none(cook_id)
-
-    def delete_cook(self):
-        self.cook_repo.delete(self.cook)
-
-    def update_cook(self) -> None:
-        id, data = self.cook.id, dict(list(self.to_dict().items())[1:])
-        self.cook_repo.update(id, **data)
+    def _load_related_data_impl(self) -> List[Dish]:
+        """Загрузка блюд повара"""
+        self.dishes = self.repository.get_dishes_by_cook_id(cook_id=self.model.id)
+        return self.dishes
 
     def load_dishes(self) -> None:
-        if not self.cook:
-            raise ValueError("Cook not found")
-        self.dishes = self.cook_repo.get_dishes_by_cook_id(cook_id=self.cook.id)
+        """Алиас для обратной совместимости"""
+        self.load_related_data()
 
     def get_top_cooks(self, limit: int) -> List[Dict[str, Any]]:
-        raw_results = self.cook_repo.get_top_cooks(limit)
+        raw_results = self.repository.get_top_cooks(limit)
         return [
             {
                 "id": cook.id,
@@ -43,12 +31,16 @@ class CookViewModel:
         ]
 
     def to_dict(self) -> Dict[str, Any]:
-        if not self.cook:
+        if not self.model:
             return {}
+
+        if not self.dishes:
+            self.load_related_data()
+
         return {
-            "id": self.cook.id,
-            "name": self.cook.name,
-            "bio": self.cook.bio,
+            "id": self.model.id,
+            "name": self.model.name,
+            "bio": self.model.bio,
             "dishes": [
                 {
                     "id": d.id,
@@ -59,3 +51,16 @@ class CookViewModel:
                 for d in self.dishes
             ],
         }
+
+    # Алиасы для обратной совместимости
+    def add_cook(self, cook: Cook) -> None:
+        self.add(cook)
+
+    def load_cook(self, cook_id: int) -> None:
+        self.load(cook_id)
+
+    def delete_cook(self) -> None:
+        self.delete()
+
+    def update_cook(self) -> None:
+        self.update()

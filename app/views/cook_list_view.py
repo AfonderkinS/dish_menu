@@ -92,7 +92,7 @@ class CookListView(ft.Container):
             )
 
         self.all_cooks_list.controls.clear()
-        all_cooks = self.view_model.cook_repo.find_all()
+        all_cooks = self.view_model.repository.find_all()
         for cook in all_cooks:
             self.all_cooks_list.controls.append(
                 create_list_item(
