@@ -24,6 +24,20 @@ class DishViewModel(BaseViewModel[Dish, DishRepository]):
         ]
         return self.ingredients
 
+    def _prepare_update_data(self) -> Dict[str, Any]:
+        """Подготовка данных для обновления, исключая отношения"""
+        if not self.model:
+            return {}
+        data = {
+            "name": self.model.name,
+            "description": self.model.description,
+            "recipe": self.model.recipe,
+            "image_url": self.model.image_url,
+        }
+        if hasattr(self.model, "cook_id") and self.model.cook_id:
+            data["cook_id"] = self.model.cook_id
+        return data
+
     def get_ingredients(self) -> List[Dict[str, Any]]:
         """Получение ингредиентов блюда"""
         self.load_related_data()
@@ -61,16 +75,12 @@ class DishViewModel(BaseViewModel[Dish, DishRepository]):
         if not self.model:
             return {}
 
-        if not self.ingredients:
-            self.load_related_data()
-
         return {
             "id": self.model.id,
             "name": self.model.name,
             "recipe": self.model.recipe,
             "description": self.model.description,
             "image_url": self.model.image_url,
-            "ingredients": self.ingredients,
         }
 
     def delete_dish(self) -> None:

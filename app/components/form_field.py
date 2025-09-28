@@ -11,7 +11,11 @@ from styles import (
 
 
 def create_text_field(
-    label: str, value: str = None, on_change=None, multiline: bool = False
+    label: str,
+    value: str = None,
+    on_change=None,
+    multiline: bool = False,
+    suffix: ft.Control | None = None,
 ):
     return ft.TextField(
         label=label,
@@ -22,6 +26,7 @@ def create_text_field(
         border_color=SECONDARY_COLOR,
         focused_border_color=ACCENT_COLOR,
         on_change=on_change,
+        suffix=suffix,
     )
 
 

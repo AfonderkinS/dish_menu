@@ -31,10 +31,32 @@ class DishDetailView(ft.Container):
         self.view_model = view_model
         self.dish_id = dish_id
         self.on_back = on_back
+        self.file_picker = ft.FilePicker(on_result=self._on_file_selected)
         self.name_field = create_text_field("Name")
         self.description_field = create_text_field("Description", multiline=True)
         self.recipe_field = create_text_field("Recipe", multiline=True)
-        self.image_url_field = create_text_field("Image URL")
+        self.image_url_field = create_text_field(
+            "Image URL",
+            suffix=create_icon_button(
+                ft.Icons.FOLDER_OPEN,
+                on_click=lambda _: self.file_picker.pick_files(
+                    allow_multiple=False,
+                    allowed_extensions=[
+                        "jpg",
+                        "jpeg",
+                        "png",
+                        "gif",
+                        "bmp",
+                        "webp",
+                        "tiff",
+                        "svg",
+                        "ico",
+                    ],
+                    dialog_title="Выберите изображение",
+                ),
+                tooltip="Select file",
+            ),
+        )
         self.cook_dropdown = ft.Dropdown(
             label="Cook",
             options=[],
@@ -50,6 +72,7 @@ class DishDetailView(ft.Container):
             color=CONTRAST_COLOR,
         )
         self.new_weight = create_number_field("Weight")
+        self._page.overlay.append(self.file_picker)
 
         super().__init__(
             content=ft.Column(
@@ -105,6 +128,11 @@ class DishDetailView(ft.Container):
             padding=PADDING,
             bgcolor=PRIMARY_COLOR,
         )
+
+    def _on_file_selected(self, e: ft.FilePickerResultEvent) -> None:
+        if e.files:
+            self.image_url_field.value = e.files[0].path
+            self._page.update()
 
     def _on_delete(self):
         self.view_model.delete_dish()

@@ -59,6 +59,59 @@ class DishListView(ft.Container):
             bgcolor=PRIMARY_COLOR,
         )
 
+    def _create_dish_item(self, dish: Dish) -> ft.Container:
+        """Создает элемент списка с изображением блюда"""
+        content = ft.Row(
+            [
+                # Изображение
+                ft.Container(
+                    content=ft.Image(
+                        src=(
+                            dish.image_url
+                            if dish.image_url
+                            else "/images/placeholder.png"
+                        ),
+                        width=60,
+                        height=60,
+                        fit=ft.ImageFit.COVER,
+                        error_content=ft.Icon(
+                            ft.Icons.RESTAURANT, size=40, color=CONTRAST_COLOR
+                        ),
+                    ),
+                    width=60,
+                    height=60,
+                    border_radius=8,
+                    clip_behavior=ft.ClipBehavior.HARD_EDGE,
+                ),
+                ft.Column(
+                    [
+                        ft.Text(
+                            dish.name,
+                            style=get_text_style(
+                                16, CONTRAST_COLOR, ft.FontWeight.BOLD
+                            ),
+                        ),
+                        ft.Text(
+                            dish.description or "No description",
+                            style=get_text_style(12, CONTRAST_COLOR),
+                            max_lines=2,
+                        ),
+                    ],
+                    expand=True,
+                    spacing=4,
+                ),
+            ],
+            spacing=12,
+        )
+
+        return ft.Container(
+            content=content,
+            on_click=lambda e: self.on_select_dish(dish.id),
+            padding=12,
+            border_radius=8,
+            bgcolor=f"{CONTRAST_COLOR}10",
+        )
+
     def _on_add_dish(self):
         form: FormDialog = (
             FormBuilder("Add cook")
@@ -88,13 +141,7 @@ class DishListView(ft.Container):
     def update_list(self):
         self.dishes_list.controls.clear()
         for dish in self.view_model.dishes:
-            self.dishes_list.controls.append(
-                create_list_item(
-                    title=dish.name,
-                    subtitle=dish.description,
-                    on_click=lambda e, d=dish: self.on_select_dish(d.id)
-                )
-            )
+            self.dishes_list.controls.append(self._create_dish_item(dish))
         self._page.update()
 
     def handle_search(self, e):
